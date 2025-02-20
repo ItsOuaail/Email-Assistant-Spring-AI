@@ -1,9 +1,13 @@
 package com.email.writer.app;
-
+import java.util.List;
+import java.util.Map;
+import org.springframework.http.MediaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ClientHttpRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
@@ -28,7 +32,7 @@ public class EmailGeneratorService {
         String prompt = buildPrompt(emailRequest);
         // Craft a request
         Map<String, Object> requestBody = Map.of(
-                "content", new Object[]{
+                "contents", new Object[]{
                         Map.of("parts", new Object[]{
                                 Map.of("text", prompt)
                         })
@@ -38,6 +42,7 @@ public class EmailGeneratorService {
         String response = webClient.post()
                 .uri(geminiApiUrl + gemeniApiKey)
                 .header("Content-Type", "application/json")
+                .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
@@ -49,7 +54,7 @@ public class EmailGeneratorService {
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(response);
-            return rootNode.path("condidates")
+            return rootNode.path("candidates")
                     .get(0)
                     .path("content")
                     .path("parts")
